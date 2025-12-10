@@ -27,33 +27,58 @@ function getUserByUsername(username) { return users.find(u => u.username.toLower
 function getUserById(id) { return users.find(u => u.id === id); }
 
 async function getUserByUsernameAsync(username) {
+  // Prefer master_users in BUTTON database; fall back to dash_db; finally JSON
+  try {
+    await db.initButtonDB();
+    const bpool = db.getButtonPool();
+    if (bpool) {
+      const [rows] = await bpool.execute('SELECT id, username, role, salt, hash, lines FROM master_users WHERE username = ?', [String(username)]);
+      if (rows.length) {
+        const u = rows[0];
+        const lines = typeof u.lines === 'string' && u.lines ? String(u.lines).split(',').map(s => s.trim()).filter(Boolean) : Array.isArray(u.lines) ? u.lines : [];
+        return { id: u.id, username: u.username, role: u.role, salt: u.salt, hash: u.hash, lines };
+      }
+    }
+  } catch {}
   try {
     await db.initMySQL();
     const pool = db.getMySQLPool();
-    if (!pool) return getUserByUsername(username);
-    const [rows] = await pool.execute('SELECT id, username, role, salt, hash FROM users WHERE username = ?', [String(username)]);
-    if (!rows.length) return null;
-    const u = rows[0];
-    const [ls] = await pool.execute('SELECT line_id FROM user_lines WHERE user_id = ?', [u.id]);
-    return { id: u.id, username: u.username, role: u.role, salt: u.salt, hash: u.hash, lines: ls.map(r => r.line_id) };
-  } catch {
-    return getUserByUsername(username);
-  }
+    if (pool) {
+      const [rows] = await pool.execute('SELECT id, username, role, salt, hash FROM users WHERE username = ?', [String(username)]);
+      if (!rows.length) return null;
+      const u = rows[0];
+      const [ls] = await pool.execute('SELECT line_id FROM user_lines WHERE user_id = ?', [u.id]);
+      return { id: u.id, username: u.username, role: u.role, salt: u.salt, hash: u.hash, lines: ls.map(r => r.line_id) };
+    }
+  } catch {}
+  return getUserByUsername(username);
 }
 
 async function getUserByIdAsync(id) {
   try {
+    await db.initButtonDB();
+    const bpool = db.getButtonPool();
+    if (bpool) {
+      const [rows] = await bpool.execute('SELECT id, username, role, salt, hash, lines FROM master_users WHERE id = ?', [id]);
+      if (rows.length) {
+        const u = rows[0];
+        const lines = typeof u.lines === 'string' && u.lines ? String(u.lines).split(',').map(s => s.trim()).filter(Boolean) : Array.isArray(u.lines) ? u.lines : [];
+        return { id: u.id, username: u.username, role: u.role, salt: u.salt, hash: u.hash, lines };
+      }
+    }
+  } catch {}
+  try {
     await db.initMySQL();
     const pool = db.getMySQLPool();
-    if (!pool) return getUserById(id);
-    const [rows] = await pool.execute('SELECT id, username, role, salt, hash FROM users WHERE id = ?', [id]);
-    if (!rows.length) return null;
-    const u = rows[0];
-    const [ls] = await pool.execute('SELECT line_id FROM user_lines WHERE user_id = ?', [u.id]);
-    return { id: u.id, username: u.username, role: u.role, salt: u.salt, hash: u.hash, lines: ls.map(r => r.line_id) };
-  } catch {
-    return getUserById(id);
-  }
+    if (pool) {
+      const [rows] = await pool.execute('SELECT id, username, role, salt, hash FROM users WHERE id = ?', [id]);
+      if (!rows.length) return null;
+      const u = rows[0];
+      const [ls] = await pool.execute('SELECT line_id FROM user_lines WHERE user_id = ?', [u.id]);
+      return { id: u.id, username: u.username, role: u.role, salt: u.salt, hash: u.hash, lines: ls.map(r => r.line_id) };
+    }
+  } catch {}
+  return getUserById(id);
 }
 
 function createUser({ username, password, role, lines = [] }) {

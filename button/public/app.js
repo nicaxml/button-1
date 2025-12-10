@@ -259,6 +259,7 @@ document.addEventListener('click', (e) => {
   if (v === 'master-mesin') { showMasterMesin(); setRouteIndicator('master-mesin'); try { sessionStorage.setItem('route', 'master-mesin'); } catch {} }
   if (v === 'master-line') { showMasterLine(); setRouteIndicator('master-line'); try { sessionStorage.setItem('route', 'master-line'); } catch {} }
   if (v === 'master-style') { showMasterStyle(); setRouteIndicator('master-style'); try { sessionStorage.setItem('route', 'master-style'); } catch {} }
+  if (v === 'master-proses') { showMasterProses(); setRouteIndicator('master-proses'); try { sessionStorage.setItem('route', 'master-proses'); } catch {} }
 });
 
 const logoutLink = document.getElementById('logoutLink');
@@ -313,6 +314,9 @@ function enforceRoleUI() {
       } else if (route === 'master-style') {
         showMasterStyle();
         setRouteIndicator('master-style');
+      } else if (route === 'master-proses') {
+        showMasterProses();
+        setRouteIndicator('master-proses');
       } else {
         setView('task');
         restoreDashboard();
@@ -384,12 +388,21 @@ function hideMasterStyle() {
   if (section) section.classList.add('d-none');
 }
 
+function showMasterProses() {
+  showSectionOnly('masterProsesSection');
+}
+
+function hideMasterProses() {
+  const section = document.getElementById('masterProsesSection');
+  if (section) section.classList.add('d-none');
+}
+
 function showSectionOnly(id) {
   const linePanel = document.querySelector('.line-panel');
   const controlsBar = document.querySelector('.controls-bar');
   if (linePanel) linePanel.classList.add('d-none');
   if (controlsBar) controlsBar.classList.add('d-none');
-  ['masterMesinSection','masterLineSection','masterStyleSection'].forEach(s => {
+  ['masterMesinSection','masterLineSection','masterStyleSection','masterProsesSection'].forEach(s => {
     const el = document.getElementById(s);
     if (el) el.classList.add('d-none');
   });
@@ -402,7 +415,7 @@ function restoreDashboard() {
   const controlsBar = document.querySelector('.controls-bar');
   if (linePanel) linePanel.classList.remove('d-none');
   if (controlsBar) controlsBar.classList.remove('d-none');
-  ['masterMesinSection','masterLineSection','masterStyleSection'].forEach(s => {
+  ['masterMesinSection','masterLineSection','masterStyleSection','masterProsesSection'].forEach(s => {
     const el = document.getElementById(s);
     if (el) el.classList.add('d-none');
   });

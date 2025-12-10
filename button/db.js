@@ -39,6 +39,7 @@ const DB_MYSQL = (process.env.DB_MYSQL || 'false').toLowerCase() === 'true';
 let pool = null;
 let poolMach = null;
 let poolLine = null;
+let poolButton = null;
 
 function toSqlDatetime(iso) {
   const d = iso ? new Date(iso) : new Date();
@@ -79,6 +80,18 @@ async function initLineDB() {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASS || '',
     database: process.env.LINE_DB_NAME || 'line_db',
+    waitForConnections: true,
+    connectionLimit: 10
+  });
+}
+
+async function initButtonDB() {
+  if (poolButton) return;
+  poolButton = await mysql.createPool({
+    host: process.env.DB_HOST || '127.0.0.1',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASS || '',
+    database: process.env.BUTTON_DB_NAME || 'button',
     waitForConnections: true,
     connectionLimit: 10
   });
@@ -417,6 +430,7 @@ function setLineStatus(line, status) {
 
 module.exports = { seedInitial, getState, getLines, getLine, getLineStyle, setLineStyle, setLineStatus, upsertMachine, incrementMachine, getStateLive, getLinesLive, getLineLive, getLineStyleLive, getLineStatusLive, 
   initMySQL, getMySQLPool,
+  initButtonDB, getButtonPool: () => poolButton,
   getKategoriMaster, createKategoriMaster, updateKategoriMaster, deleteKategoriMaster,
   getJenisMesinMaster, createJenisMesinMaster, updateJenisMesinMaster, deleteJenisMesinMaster,
   getMerkMaster, createMerkMaster, updateMerkMaster, deleteMerkMaster,
